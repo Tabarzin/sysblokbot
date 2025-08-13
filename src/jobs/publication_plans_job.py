@@ -19,7 +19,8 @@ class PublicationPlansJob(BaseJob):
     def _execute(
         app_context: AppContext, send: Callable[[str], None], called_from_handler=False
     ):
-        paragraphs = [load("publication_plans_job__intro")]  # list of paragraph strings
+        paragraphs = [load("publication_plans_job__intro")
+                      ]  # list of paragraph strings
         errors = {}
 
         paragraphs += PublicationPlansJob._retrieve_cards_for_paragraph(
@@ -75,7 +76,8 @@ class PublicationPlansJob(BaseJob):
         parse_failure_counter = 0
 
         paragraphs = [
-            load("common_report__list_title_and_size", title=title, length=len(cards))
+            load("common_report__list_title_and_size",
+                 title=title, length=len(cards))
         ]
 
         for card in cards:
@@ -91,7 +93,8 @@ class PublicationPlansJob(BaseJob):
                 if label.color not in [TrelloCardColor.BLACK, BoardCardColor.BLACK]
             ]
 
-            is_archive_card = load("common_trello_label__archive") in label_names
+            is_archive_card = load(
+                "common_trello_label__archive") in label_names
 
             card_is_ok = check_trello_card(
                 card,
@@ -100,10 +103,8 @@ class PublicationPlansJob(BaseJob):
                     card_fields.title is None
                     and card.lst.id
                     not in (
-                        focalboard_client.lists_config[BoardListAlias.PENDING_EDITOR_5],
-                        focalboard_client.lists_config[
-                            BoardListAlias.PENDING_SEO_EDITOR_6
-                        ],
+                        trello_client.lists_config[TrelloListAlias.EDITED_NEXT_WEEK],
+                        trello_client.lists_config[TrelloListAlias.TO_SEO_EDITOR],
                     )
                 ),
                 is_bad_illustrators=(
@@ -145,5 +146,6 @@ class PublicationPlansJob(BaseJob):
             )
 
         if parse_failure_counter > 0:
-            logger.error(f"Unparsed cards encountered: {parse_failure_counter}")
+            logger.error(
+                f"Unparsed cards encountered: {parse_failure_counter}")
         return paragraphs

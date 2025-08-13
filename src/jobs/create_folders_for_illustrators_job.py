@@ -33,6 +33,8 @@ class CreateFoldersForIllustratorsJob(BaseJob):
         result = CreateFoldersForIllustratorsJob._create_folders(
             app_context=app_context,
             list_aliases=(
+                BoardListAlias.DRAFT_N_PROGRESS_3,
+                BoardListAlias.DRAFT_COMPLETED_4,
                 BoardListAlias.PENDING_EDITOR_5,
                 BoardListAlias.PENDING_SEO_EDITOR_6,
                 BoardListAlias.APPROVED_EDITOR_7,
@@ -71,7 +73,8 @@ class CreateFoldersForIllustratorsJob(BaseJob):
             )
             cards = app_context.focalboard_client.get_cards(list_ids)
         else:
-            list_ids = app_context.trello_client.get_list_id_from_aliases(list_aliases)
+            list_ids = app_context.trello_client.get_list_id_from_aliases(
+                list_aliases)
             cards = app_context.trello_client.get_cards(list_ids)
 
         parse_failure_counter = 0
@@ -82,16 +85,19 @@ class CreateFoldersForIllustratorsJob(BaseJob):
                 continue
 
             if app_context.trello_client.deprecated:
-                card_fields = app_context.focalboard_client.get_custom_fields(card.id)
+                card_fields = app_context.focalboard_client.get_custom_fields(
+                    card.id)
             else:
-                card_fields = app_context.trello_client.get_custom_fields(card.id)
+                card_fields = app_context.trello_client.get_custom_fields(
+                    card.id)
 
             label_names = [
                 label.name
                 for label in card.labels
                 if label.color not in [TrelloCardColor.BLACK, BoardCardColor.BLACK]
             ]
-            is_archive_card = load("common_trello_label__archive") in label_names
+            is_archive_card = load(
+                "common_trello_label__archive") in label_names
 
             if is_archive_card:
                 continue
@@ -123,7 +129,8 @@ class CreateFoldersForIllustratorsJob(BaseJob):
                         url=card_fields.cover,
                     )
                     folder_state = IllustratorFolderState.INCORRECT_URL
-                    logger.error(f"The folder for card {card.url} was not created")
+                    logger.error(
+                        f"The folder for card {card.url} was not created")
                 else:
                     # save path to folder into trello card
                     logger.info(
@@ -156,7 +163,8 @@ class CreateFoldersForIllustratorsJob(BaseJob):
             result.append((folder_state, card_text))
 
         if parse_failure_counter > 0:
-            logger.error(f"Unparsed cards encountered: {parse_failure_counter}")
+            logger.error(
+                f"Unparsed cards encountered: {parse_failure_counter}")
         return result
 
     @staticmethod
