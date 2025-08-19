@@ -13,7 +13,6 @@ from .roles.role_manager import RoleManager
 from .sheets.sheets_client import GoogleSheetsClient
 from .strings import StringsDBClient
 from .tg.tg_client import TgClient
-from .trello.trello_client import TrelloClient
 from .utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -49,9 +48,6 @@ class AppContext(Singleton):
             self.db_client.fetch_all(self.sheets_client)
             self.role_manager.calculate_db_roles()
 
-        self.trello_client = TrelloClient(
-            trello_config=config_manager.get_trello_config()
-        )
         self.focalboard_client = FocalboardClient(
             focalboard_config=config_manager.get_focalboard_config()
         )
