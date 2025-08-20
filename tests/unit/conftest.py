@@ -12,7 +12,6 @@ from src.drive.drive_client import GoogleDriveClient
 from src.sheets.sheets_client import GoogleSheetsClient
 from src.strings import StringsDBClient
 from src.tg.sender import TelegramSender
-from src.trello.trello_client import TrelloClient
 
 ROOT_TEST_DIR = os.path.abspath(os.path.dirname(__file__))
 STATIC_TEST_DIR = os.path.join(ROOT_TEST_DIR, "static")
@@ -34,37 +33,6 @@ def mock_config_manager(monkeypatch):
 def mock_config_jobs_manager(monkeypatch):
     config_manager = ConfigManager(CONFIG_PATH, CONFIG_OVERRIDE_PATH)
     return config_manager
-
-
-@pytest.fixture
-def mock_trello(monkeypatch, mock_config_manager):
-    def _make_request(_, uri: str, payload={}) -> (int, Dict):
-
-        load_json = JsonLoader(TRELLO_TEST_DIR).load_json
-
-        if uri.startswith("boards"):
-            if uri.endswith("lists"):
-                return 200, load_json("lists.json")
-            elif uri.endswith("cards"):
-                return 200, load_json("cards.json")
-            elif uri.endswith("members"):
-                return 200, load_json("members.json")
-            elif uri.endswith("customFields"):
-                return 200, load_json("board_custom_fields.json")
-            else:
-                return 200, load_json("board.json")
-        elif uri.startswith("cards"):
-            if uri.endswith("customFieldItems"):
-                return 200, load_json("card_custom_fields.json")
-            if uri.endswith("actions"):
-                return 200, load_json("card_actions.json")
-        elif uri.startswith("lists"):
-            if uri.endswith("cards"):
-                return 200, load_json("cards.json")
-
-    monkeypatch.setattr(TrelloClient, "_make_request", _make_request)
-
-    return TrelloClient(trello_config=mock_config_manager.get_trello_config())
 
 
 @pytest.fixture
