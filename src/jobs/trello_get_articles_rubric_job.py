@@ -1,10 +1,9 @@
-from typing import Callable, List
+from typing import Callable
 
 from ..app_context import AppContext
 from ..consts import TrelloListAlias
 from ..strings import load
 from ..tg.sender import pretty_send
-from ..trello.trello_client import TrelloClient
 from ..trello.trello_objects import TrelloCard
 from . import utils
 from .base_job import BaseJob
@@ -65,35 +64,3 @@ class TrelloGetArticlesRubricJob(BaseJob):
                 load("common_role__author"), card_fields.authors
             ),
         )
-
-    def _get_rubric_paragraphs(
-        app_context: AppContext,
-        trello_client: TrelloClient,
-        rubric_title: str,
-        rubric_alias: str,
-        rubric_name: str,
-    ) -> List[str]:
-        if not trello_client.deprecated:
-            list_ids = trello_client.get_list_id_from_aliases([rubric_alias])
-            cards = trello_client.get_cards(list_ids)
-        else:
-            list_ids = app_context.focalboard_client.get_list_id_from_aliases(
-                [rubric_alias]
-            )
-            cards = app_context.focalboard_client.get_cards(list_ids)
-        cards_filtered = []
-        for card in cards:
-            if rubric_name in [label.name for label in card.labels]:
-                cards_filtered.append(card)
-
-        paragraphs = [
-            load(
-                "common_report__list_title_and_size",
-                title=rubric_title,
-                length=len(cards_filtered),
-            )
-        ]
-        for card in cards_filtered:
-            formatted_card = TrelloGetArticlesRubricJob._format_card(card, app_context)
-            paragraphs.append(formatted_card)
-        return paragraphs

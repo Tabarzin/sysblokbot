@@ -10,7 +10,6 @@ from ...db.db_client import DBClient
 from ...focalboard.focalboard_client import FocalboardClient
 from ...strings import load
 from ...tg.handlers import get_tasks_report_handler
-from ...trello.trello_client import TrelloClient
 from .utils import get_chat_id, get_chat_name, get_sender_id, reply
 
 logger = logging.getLogger(__name__)
@@ -56,35 +55,7 @@ def handle_user_message(
     # - If it's the last piece of info expected from user, you should call
     #   `set_next_action(command_data, None)` so that we won't talk to user anymore,
     #   until they start a new command.
-    if next_action == PlainTextUserAction.GET_TASKS_REPORT__ENTER_BOARD_URL:
-        trello_client = TrelloClient()
-        try:
-            board = trello_client.get_board_by_url(user_input)
-            trello_lists = trello_client.get_lists(board.id)
-        except Exception:
-            reply(load("get_tasks_report_handler__board_not_found"), update)
-            return
-        command_data[consts.GetTasksReportData.BOARD_ID] = board.id
-        command_data[consts.GetTasksReportData.LISTS] = [
-            lst.to_dict() for lst in trello_lists
-        ]
-
-        trello_lists_formatted = "\n".join(
-            [f"{i + 1}) {lst.name}" for i, lst in enumerate(trello_lists)]
-        )
-        reply(
-            load(
-                "get_tasks_report_handler__choose_trello_list",
-                lists=trello_lists_formatted,
-            ),
-            update,
-        )
-        set_next_action(
-            command_data, PlainTextUserAction.GET_TASKS_REPORT__ENTER_LIST_NUMBER
-        )
-        return
-    elif next_action == PlainTextUserAction.GET_TASKS_REPORT__ENTER_BOARD_NUMBER:
-        trello_client = TrelloClient()
+    if next_action == PlainTextUserAction.GET_TASKS_REPORT__ENTER_BOARD_NUMBER:
         focalboard_client = FocalboardClient()
         try:
             board_list = tg_context.chat_data[consts.GetTasksReportData.LISTS]
@@ -94,12 +65,9 @@ def handle_user_message(
             list_idx = int(user_input) - 1
             assert 0 <= list_idx < len(board_list)
             board_id = board_list[list_idx]["id"]
-            if use_focalboard:
-                trello_lists = focalboard_client.get_lists(board_id, sorted=True)
-                trello_lists = trello_lists[::-1]
-            else:
-                trello_lists = trello_client.get_lists(board_id)
-                trello_lists = trello_lists[::-1]
+            trello_lists = focalboard_client.get_lists(board_id, sorted=True)
+            trello_lists = trello_lists[::-1]
+
         except Exception as e:
             logger.warning("Failed to parse board number", exc_info=e)
             reply(
