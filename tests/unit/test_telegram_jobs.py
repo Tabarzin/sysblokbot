@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 from freezegun import freeze_time
 
@@ -8,7 +6,6 @@ from src.app_context import AppContext
 from src.config_manager import ConfigManager
 from src.strings import load
 from src.tg.sender import TelegramSender
-from src.trello.trello_client import TrelloClient
 
 
 @freeze_time("2020-05-01 11:59:00")
@@ -52,9 +49,6 @@ from src.trello.trello_client import TrelloClient
 @pytest.mark.xfail(reason="TODO: adapt to sheetfu")
 def test_job(
     monkeypatch,
-    mock_strings_db_client,
-    mock_trello,
-    mock_sheets_client,
     mock_config_manager,
     mock_sender,
     job,
@@ -75,8 +69,6 @@ def test_job(
 @pytest.mark.parametrize("job, output_parts", ((jobs.sample_job.SampleJob, ["Error"]),))
 def test_job_failed(
     monkeypatch,
-    mock_trello,
-    mock_sheets_client,
     mock_config_manager,
     mock_sender,
     job,
