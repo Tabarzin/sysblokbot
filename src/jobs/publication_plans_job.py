@@ -2,11 +2,12 @@ import datetime
 import logging
 from typing import Callable, List
 
+from ..focalboard.focalboard_client import FocalboardClient
+
 from ..app_context import AppContext
 from ..consts import BoardCardColor, BoardListAlias, TrelloCardColor
 from ..strings import load
 from ..tg.sender import pretty_send
-from ..trello.trello_client import TrelloClient
 from .base_job import BaseJob
 from .utils import check_trello_card, format_errors, format_possibly_plural
 
@@ -22,7 +23,7 @@ class PublicationPlansJob(BaseJob):
         errors = {}
 
         paragraphs += PublicationPlansJob._retrieve_cards_for_paragraph(
-            trello_client=app_context.trello_client,
+            focalboard_client=app_context.focalboard_client,
             title=load("publication_plans_job__title_publish_this_week"),
             list_aliases=(
                 BoardListAlias.PUBLISH_BACKLOG_9,
@@ -34,7 +35,7 @@ class PublicationPlansJob(BaseJob):
         )
 
         paragraphs += PublicationPlansJob._retrieve_cards_for_paragraph(
-            trello_client=app_context.trello_client,
+            focalboard_client=app_context.focalboard_client,
             title=load("common_report__section_title_editorial_board"),
             list_aliases=(
                 BoardListAlias.PENDING_EDITOR_5,
@@ -55,7 +56,7 @@ class PublicationPlansJob(BaseJob):
 
     @staticmethod
     def _retrieve_cards_for_paragraph(
-        trello_client: TrelloClient,
+        focalboard_client: FocalboardClient,
         title: str,
         list_aliases: List[BoardListAlias],
         errors: dict,
@@ -67,8 +68,8 @@ class PublicationPlansJob(BaseJob):
         Returns a list of paragraphs that should always go in a single message.
         """
         logger.info(f'Started counting: "{title}"')
-        list_ids = trello_client.get_list_id_from_aliases(list_aliases)
-        cards = trello_client.get_cards(list_ids)
+        list_ids = focalboard_client.get_list_id_from_aliases(list_aliases)
+        cards = focalboard_client.get_cards(list_ids)
         if show_due:
             cards.sort(key=lambda card: card.due or datetime.datetime.min)
         parse_failure_counter = 0
@@ -82,7 +83,7 @@ class PublicationPlansJob(BaseJob):
                 parse_failure_counter += 1
                 continue
 
-            card_fields = trello_client.get_custom_fields(card.id)
+            card_fields = focalboard_client.get_custom_fields(card.id)
 
             label_names = [
                 label.name
@@ -99,8 +100,10 @@ class PublicationPlansJob(BaseJob):
                     card_fields.title is None
                     and card.lst.id
                     not in (
-                        trello_client.lists_config[BoardListAlias.PENDING_EDITOR_5],
-                        trello_client.lists_config[BoardListAlias.PENDING_SEO_EDITOR_6],
+                        focalboard_client.lists_config[BoardListAlias.PENDING_EDITOR_5],
+                        focalboard_client.lists_config[
+                            BoardListAlias.PENDING_SEO_EDITOR_6
+                        ],
                     )
                 ),
                 is_bad_illustrators=(
