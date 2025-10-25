@@ -105,11 +105,12 @@ class SysBlokBot:
             self.manager_reply_handler("trello_board_state_job"),
             "получить сводку о состоянии доски",
         )
+
         self.add_manager_handler(
             "get_publication_plans",
             CommandCategories.SUMMARY,
             self.manager_reply_handler("publication_plans_job"),
-            "получить сводку о состоянии доски",
+            "получить сводку о публикуемыми на неделе постами",
         )
         self.add_manager_handler(
             "get_publication_plans",
